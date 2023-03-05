@@ -30,6 +30,9 @@
   </ItemGroup>
   
   <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\libs\Assembly-CSharp.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib">
       <HintPath>..\libs\mscorlib.dll</HintPath>
     </Reference>

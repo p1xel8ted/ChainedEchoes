@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
 using BepInEx;
 using HarmonyLib;
 using UnityEngine;
@@ -21,6 +23,25 @@ namespace ChainedEchoesTweaks
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
             _hi = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), PluginGuid);
         }
+
+        //disable intros
+        [HarmonyPatch(typeof(GameStart), nameof(GameStart.Progressing), MethodType.Enumerator)]
+        public static class HarmonyTranspiler
+        {
+            [HarmonyLib.HarmonyTranspiler]
+            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                var field = AccessTools.Field(typeof(GameStart), nameof(GameStart.animationPlayed));
+                return new CodeMatcher(instructions)
+                    .MatchForward(false,
+                        new CodeMatch(OpCodes.Ldc_I4_0),
+                        new CodeMatch(OpCodes.Stsfld, field),
+                        new CodeMatch(OpCodes.Ldarg_0))
+                    .SetOpcodeAndAdvance(OpCodes.Ldc_I4_1)
+                    .InstructionEnumeration();
+            }
+        }
+
 
         private void OnDisable()
         {
@@ -47,9 +68,9 @@ namespace ChainedEchoesTweaks
             }
 
             var currentMap = SceneManager.GetActiveScene().name;
-            var map = $"map_{currentMap.Substring(0,2)}";
+            var map = $"map_{currentMap.Substring(0, 2)}";
 
-             var mapOne = GameObject.Find("map_none/BG");
+            var mapOne = GameObject.Find("map_none/BG");
             if (mapOne != null)
             {
                 mapOne.transform.localScale = new Vector3(160, 100, 1);
@@ -79,7 +100,7 @@ namespace ChainedEchoesTweaks
             {
                 shopBg.transform.localScale = new Vector3(2.6f, 2, 1);
             }
-            
+
             var shopBottomBar = GameObject.Find("__Shop Menu(Clone)/BlackBarCanvas/BlackBarBottom/Image");
             if (shopBottomBar != null)
             {
